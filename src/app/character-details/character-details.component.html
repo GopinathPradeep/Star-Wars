@@ -1,0 +1,215 @@
+<div class="container-fluid">
+  <div class="d-flex justify-content-end">
+    <button class="btn btn-primary" (click)="navigate()">Back</button>
+  </div>
+  <div class="container mt-5">
+    <div class="row">
+      <div class="col-md-4">
+        <div class="card">
+          <div class="card-body d-flex flex-column align-items-center">
+            <img
+              *ngIf="character.gender == 'male'"
+              src="assets/image/male avatar.png"
+              style="height: 20vh"
+              class="mb-3"
+              alt="Character Avatar"
+            />
+            <img
+              *ngIf="character.gender == 'female'"
+              src="../../assets/image/female.jpg"
+              style="height: 20vh"
+              class="mb-3"
+              alt="Character Avatar"
+            />
+            <img
+              *ngIf="character.gender == 'n/a'"
+              src="../../assets/image/avatar.jpg"
+              style="height: 20vh"
+              class="mb-3"
+              alt="Character Avatar"
+            />
+            <div class="d-flex flex-column align-items-start w-100">
+              <div class="d-flex d-flex justify-content-between w-100">
+                <div class="details">
+                  <p>Name</p>
+                  <p>Born</p>
+                  <p>Gender</p>
+                  <p>Height</p>
+                  <p>Weight</p>
+                  <p>Created at</p>
+                  <p>Edited at</p>
+                  <p>Eye color</p>
+                  <p>Skin color</p>
+                </div>
+                <div class=".">
+                  <p>:</p>
+                  <p>:</p>
+                  <p>:</p>
+                  <p>:</p>
+                  <p>:</p>
+                  <p>:</p>
+                  <p>:</p>
+                  <p>:</p>
+                  <p>:</p>
+                </div>
+                <div class="details_from_data">
+                  <p>{{ character.name }}</p>
+                  <p>{{ format(character.birth_year) }}</p>
+                  <p>{{ character.gender }}</p>
+                  <p>{{ format(character.height) }} cm</p>
+                  <p>{{ format(character.mass) }} kg</p>
+                  <p>{{ character.created | date : "dd/MM/yyyy hh:mm a" }}</p>
+                  <p>{{ character.edited | date : "dd/MM/yyyy hh:mm a" }}</p>
+                  <p>{{ character.hair_color }}</p>
+                  <p>{{ character.skin_color }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <div class="container" *ngIf="moviesData.length != 0">
+          <div class="row d-flex">
+            <div class="col-md-4 mb-3 d-flex">
+              <div class="card flex-fill">
+                <div class="card-header"><strong>Films</strong></div>
+                <div class="card-body">
+                  <div
+                    *ngFor="let film of moviesData"
+                    (click)="selectFilm(film)"
+                  >
+                    <a
+                      class="btn btn-outline-primary btn-block mb-2"
+                      [ngClass]="{ active: film === selectedFilm }"
+                      >{{ film.title }}</a
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-8 mb-3 d-flex">
+              <div class="card flex-fill">
+                <div class="card-header"><strong>Film Details</strong></div>
+                <div class="card-body d-flex justify-content-between">
+                  <div class="details">
+                    <p>Episode</p>
+                    <p>Director</p>
+                    <p>Producer</p>
+                    <p>Date</p>
+                  </div>
+                  <div class=".">
+                    <p>:</p>
+                    <p>:</p>
+                    <p>:</p>
+                    <p>:</p>
+                  </div>
+                  <div class="details_from_data">
+                    <p>{{ selectedFilm?.episode }}</p>
+                    <p>{{ selectedFilm?.director }}</p>
+                    <p>{{ selectedFilm?.producer }}</p>
+                    <p>{{ selectedFilm?.release_date }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="container" *ngIf="vehicleData.length != 0">
+          <div class="row d-flex">
+            <div class="col-md-4 mb-3 d-flex">
+              <div class="card flex-fill">
+                <div class="card-header"><strong>Vehicles</strong></div>
+                <div class="card-body">
+                  <div
+                    *ngFor="let vehicle of vehicleData"
+                    (click)="selectvehicle(vehicle)"
+                  >
+                    <a
+                      class="btn btn-outline-primary btn-block mb-2"
+                      [ngClass]="{ active: vehicle === selectedvehicle }"
+                      >{{ vehicle.name }}</a
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-8 mb-3 d-flex">
+              <div class="card flex-fill">
+                <div class="card-header"><strong>Vehicle Details</strong></div>
+                <div class="card-body d-flex justify-content-between">
+                  <div class="details">
+                    <p>Model</p>
+                    <p>Manufacturer</p>
+                    <p>Passengers</p>
+                    <p>Cargo Capacity</p>
+                  </div>
+                  <div class=".">
+                    <p>:</p>
+                    <p>:</p>
+                    <p>:</p>
+                    <p>:</p>
+                  </div>
+                  <div class="details_from_data">
+                    <p>{{ selectedvehicle?.model }}</p>
+                    <p>{{ selectedvehicle?.manufacturer }}</p>
+                    <p>{{ selectedvehicle?.passengers }}</p>
+                    <p>{{ selectedvehicle?.cargo_capacity }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="container" *ngIf="starShipData.length != 0">
+          <div class="row d-flex">
+            <div class="col-md-4 mb-3 d-flex">
+              <div class="card flex-fill">
+                <div class="card-header"><strong>Starships</strong></div>
+                <div class="card-body">
+                  <div
+                    *ngFor="let starShip of starShipData"
+                    (click)="selectedship(starShip)"
+                  >
+                    <a
+                      class="btn btn-outline-primary btn-block mb-2"
+                      [ngClass]="{ active: starShip === selectedstar }"
+                      >{{ starShip.name }}</a
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-8 mb-3 d-flex">
+              <div class="card flex-fill">
+                <div class="card-header"><strong>Vehicle Details</strong></div>
+                <div class="card-body d-flex justify-content-between">
+                  <div class="details">
+                    <p>Model</p>
+                    <p>Manufacturer</p>
+                    <p>Passengers</p>
+                    <p>Cargo Capacity</p>
+                  </div>
+                  <div class=".">
+                    <p>:</p>
+                    <p>:</p>
+                    <p>:</p>
+                    <p>:</p>
+                  </div>
+                  <div class="details_from_data">
+                    <p>{{ selectedstar?.model }}</p>
+                    <p>{{ selectedstar?.manufacturer }}</p>
+                    <p>{{ selectedstar?.passengers }}</p>
+                    <p>{{ selectedstar?.cargo_capacity }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

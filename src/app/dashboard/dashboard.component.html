@@ -1,0 +1,180 @@
+<div class="container-fluid">
+  <div class="row">
+    <div class="col-12 bg-primary text-white p-3">
+      <h1 class="text-center">STAR WARS</h1>
+    </div>
+  </div>
+
+  <div class="row" *ngIf="isLoading && error == ''">
+    <div class="col-md-2">
+      <div class="bg-light p-3">
+        <h4>FILTERS</h4>
+        <form [formGroup]="filterForm">
+          <div class="form-group">
+            <label for="movieName">Movie Name</label>
+            <select
+              id="movieName"
+              formControlName="movieName"
+              class="form-control"
+            >
+              <option selected disabled>Filter By Movie</option>
+              <option *ngFor="let movie of moviesData">
+                {{ movie }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="species">Species</label>
+            <select id="species" formControlName="species" class="form-control">
+              <option selected disabled>Filter By Species</option>
+              <option *ngFor="let species of speciesData">
+                {{ species }}
+              </option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="control-label">Birth Year</label>
+            <ng-multiselect-dropdown
+              [placeholder]="'Select Birth Year'"
+              [settings]="settings"
+              [data]="filteredCharacters"
+              (onSelect)="onItemSelect($event)"
+              (onDeSelect)="onItemDeSelect($event)"
+              formControlName="birthYear"
+              style="color: #000"
+            ></ng-multiselect-dropdown>
+          </div>
+          <button class="btn btn-primary mt-3" (click)="applyFilters()">
+            SEARCH</button
+          >&nbsp;
+          <button class="btn btn-secondary mt-3" (click)="clearFilter()">
+            CLEAR
+          </button>
+        </form>
+      </div>
+    </div>
+    <div class="col-md-10">
+      <div class="p-3">
+        <div
+          class="d-flex align-items-center justify-content-between"
+          *ngIf="characters?.length > 0"
+        >
+          <h4>SEARCH RESULTS</h4>
+          <div class="d-flex align-items-center">
+            <input
+              type="text"
+              class="form-control"
+              placeholder="Search..."
+              [(ngModel)]="searchText"
+              (ngModelChange)="(searchText)"
+            />
+          </div>
+        </div>
+
+        <table class="table table-responsive">
+          <thead>
+            <tr>
+              <th scope="col">SI No.</th>
+              <th scope="col">Character Name</th>
+              <th scope="col">Species</th>
+              <th scope="col">Birth Year</th>
+            </tr>
+          </thead>
+          <tbody *ngIf="displayentries?.length > 0">
+            <tr
+              *ngFor="
+                let element of displayentries | filter : searchText;
+                let i = index
+              "
+            >
+              <th
+                scope="row"
+                class="pointer"
+                (click)="navigate(element, i + 1)"
+              >
+                {{ i + 1 }}
+              </th>
+              <td class="pointer" (click)="navigate(element, i + 1)">
+                {{ element.name }}
+              </td>
+              <td class="pointer" (click)="navigate(element, i + 1)">
+                {{ element.species }}
+              </td>
+              <td class="pointer" (click)="navigate(element, i + 1)">
+                {{ findbirthyr(element.birth_year) }}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div
+          class="d-flex justify-content-center align-items-center vh-100"
+          *ngIf="displayentries?.length == 0" 
+        >
+          <div class="spinner-container">
+            <div class="spinner center">
+              <div class="spinner-blade"></div>
+              <div class="spinner-blade"></div>
+              <div class="spinner-blade"></div>
+              <div class="spinner-blade"></div>
+              <div class="spinner-blade"></div>
+              <div class="spinner-blade"></div>
+              <div class="spinner-blade"></div>
+              <div class="spinner-blade"></div>
+              <div class="spinner-blade"></div>
+              <div class="spinner-blade"></div>
+              <div class="spinner-blade"></div>
+              <div class="spinner-blade"></div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="col-md-12 mt-5 d-flex justify-content-end"
+          *ngIf="displayentries?.length >= 1"
+        >
+          <ngb-pagination
+            class="pagination-rounded"
+            [collectionSize]="totalCharacters"
+            [(page)]="currentPage"
+            [pageSize]="itemsPerPage"
+            [maxSize]="1"
+            [rotate]="true"
+            [ellipses]="true"
+            [boundaryLinks]="false"
+            (pageChange)="onPageChange($event)"
+          >
+          </ngb-pagination>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="d-flex justify-content-center align-items-center vh-100"
+    *ngIf="!isLoading && error == ''"
+  >
+    <div class="spinner-container">
+      <div class="spinner center">
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+        <div class="spinner-blade"></div>
+      </div>
+    </div>
+    <p class="ml-2 mb-0">Please wait while we fetch data...</p>
+  </div>
+
+  <div
+    class="d-flex justify-content-center align-items-center vh-100"
+    *ngIf="error != ''"
+  >
+    {{ error }}
+  </div>
+</div>

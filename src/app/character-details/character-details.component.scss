@@ -1,0 +1,35 @@
+.card-columns {
+    column-count: 1;
+  }
+  
+  @media (min-width: 576px) {
+    .card-columns {
+      column-count: 2;
+    }
+  }
+  
+  @media (min-width: 768px) {
+    .card-columns {
+      column-count: 3;
+    }
+  }
+  
+  .card-body a {
+    text-decoration: none;
+    color: #333;
+  }
+  
+  .card-body a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+  }
+
+  .details{
+    font-weight: bolder;
+  }
+
+  .scrollable {
+    max-height: 200px; /* Adjust height as needed */
+    overflow-y: auto;
+  }
+  
