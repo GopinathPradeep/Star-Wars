@@ -108,7 +108,7 @@
         </table>
         <div
           class="d-flex justify-content-center align-items-center vh-100"
-          *ngIf="displayentries?.length == 0" 
+          *ngIf="displayentries?.length == 0 && !showTable" 
         >
           <div class="spinner-container">
             <div class="spinner center">
@@ -125,6 +125,15 @@
               <div class="spinner-blade"></div>
               <div class="spinner-blade"></div>
             </div>
+          </div>
+        </div>
+
+        <div
+          class="d-flex justify-content-center align-items-center vh-100"
+          *ngIf="displayentries?.length == 0 && showTable" 
+        >
+          <div class="card">
+            NO FILTERED DATA
           </div>
         </div>
         <div

@@ -22,7 +22,7 @@
               alt="Character Avatar"
             />
             <img
-              *ngIf="character.gender == 'n/a'"
+              *ngIf="character.gender == 'n/a' || character.gender == 'none'"
               src="../../assets/image/avatar.jpg"
               style="height: 20vh"
               class="mb-3"

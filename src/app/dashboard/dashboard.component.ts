@@ -78,6 +78,7 @@ export class DashboardComponent implements OnInit {
     } else if (this.nextPage != 0) {
       this.isLoading = true;
       this.currentPage = this.nextPage;
+      this.originalresponse = this.characters
     } else {
       this.nextPage = 0;
       this.isLoading = true;
@@ -376,6 +377,7 @@ export class DashboardComponent implements OnInit {
   }
 
   onPageChange(pageNum: number): void {
+    this.showTable = false
     console.log(pageNum, 'pageNum');
     this.pageSize = this.itemsPerPage * (pageNum - 1);
     this.getPeopleData(pageNum);
@@ -385,29 +387,37 @@ export class DashboardComponent implements OnInit {
     this.subscriptions.forEach((subscription) => subscription.unsubscribe());
   }
 
+  filtered:any = []
+  showTable:boolean = false
+
   applyFilters() {
+    this.showTable = false
     const { movieName, species, birthYear } = this.filterForm.value;
     console.log(this.characters, movieName, birthYear, 'char');
 
-    let filteredCharacters = this.characters.filter((character) => {
+    this.filtered = this.characters.filter((character) => {
       return (
         character.films.flat().includes(movieName) &&
         birthYear.includes(character.birth_year) &&
         character.species.includes(species)
       );
     });
+    console.log(this.filtered,"filteredCharacters")
     this.characters = [];
     this.displayentries = []
-    this.displayentries = filteredCharacters;
+    this.displayentries = this.filtered;
+    if(this.filtered.length == 0){
+      this.showTable = true
+    }
+    else{
+      this.showTable = false
+    }
   }
 
   clearFilter() {
-    this.filterForm = new FormGroup({
-      movieName: new FormControl('Filter By Movie'),
-      species: new FormControl('Filter By Species'),
-      birthYear: new FormControl(),
-    });
+    console.log(this.originalresponse,this.characters,"this.originalresponse")
     this.displayentries = this.originalresponse;
+    this.filterForm.reset();
   }
 
   clear() {
