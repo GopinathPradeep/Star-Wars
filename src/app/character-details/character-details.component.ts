@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { DataService } from '../_services/data.service';
 import * as moment from 'moment';
@@ -9,7 +9,7 @@ import { Subscription } from 'rxjs';
   templateUrl: './character-details.component.html',
   styleUrls: ['./character-details.component.scss'],
 })
-export class CharacterDetailsComponent implements OnInit {
+export class CharacterDetailsComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   character: any;
   moviesData: any = [];
@@ -20,8 +20,8 @@ export class CharacterDetailsComponent implements OnInit {
   selectedstar: any;
   error: any = '';
   constructor(private router: Router, private dataservice: DataService) {
-    let wholeData = JSON.parse(localStorage.getItem('char'));
-    let data = JSON.parse(localStorage.getItem('navigatedCharacter'));
+    let wholeData = JSON.parse(sessionStorage.getItem('char'));
+    let data = JSON.parse(sessionStorage.getItem('navigatedCharacter'));
     let matched = wholeData.filter((r) => r.name == data.name);
     this.character = matched[0];
     console.log(this.character, 'this.character');
@@ -33,75 +33,81 @@ export class CharacterDetailsComponent implements OnInit {
 
   getdata() {
     if (this.character.films.length) {
-      const subscription = this.dataservice.getAllCharacters(this.character.films).subscribe(
-        (res: any) => {
-          res.map((character: any) => {
-            this.moviesData.push({
-              episode: character.episode_id,
-              title: character.title,
-              director: character.director,
-              producer: character.producer,
-              release_date: moment(character.release_date).format('DD-MM-YYYY'),
+      const subscription = this.dataservice
+        .getAllCharacters(this.character.films)
+        .subscribe(
+          (res: any) => {
+            res.map((character: any) => {
+              this.moviesData.push({
+                episode: character.episode_id,
+                title: character.title,
+                director: character.director,
+                producer: character.producer,
+                release_date: moment(character.release_date).format(
+                  'DD-MM-YYYY'
+                ),
+              });
             });
-          });
-          this.selectedFilm = this.moviesData[0];
-        },
-        (error) => {
-          console.error('Error in fetching API:', error);
-          this.error = 'API Call failed, Please re-load the page';
-        }
-      );
-      this.subscriptions.push(subscription)
+            this.selectedFilm = this.moviesData[0];
+          },
+          (error) => {
+            console.error('Error in fetching API:', error);
+            this.error = 'API Call failed, Please re-load the page';
+          }
+        );
+      this.subscriptions.push(subscription);
     } else {
       this.moviesData = [];
     }
 
     if (this.character.vehicles.length) {
-      const subscription = this.dataservice.getAllCharacters(this.character.vehicles).subscribe(
-        (res: any) => {
-          res.map((character: any) => {
-            this.vehicleData.push({
-              name: character.name,
-              model: character.model,
-              manufacturer: character.manufacturer,
-              passengers: character.passengers,
-              cargo_capacity: character.cargo_capacity,
+      const subscription = this.dataservice
+        .getAllCharacters(this.character.vehicles)
+        .subscribe(
+          (res: any) => {
+            res.map((character: any) => {
+              this.vehicleData.push({
+                name: character.name,
+                model: character.model,
+                manufacturer: character.manufacturer,
+                passengers: character.passengers,
+                cargo_capacity: character.cargo_capacity,
+              });
             });
-          });
-          this.selectedvehicle = this.vehicleData[0];
-        },
-        (error) => {
-          console.error('Error in fetching API:', error);
-          this.error = 'API Call failed, Please re-load the page';
-        }
-      );
-      this.subscriptions.push(subscription)
+            this.selectedvehicle = this.vehicleData[0];
+          },
+          (error) => {
+            console.error('Error in fetching API:', error);
+            this.error = 'API Call failed, Please re-load the page';
+          }
+        );
+      this.subscriptions.push(subscription);
     } else {
       this.vehicleData = [];
     }
 
     if (this.character.starships.length) {
-      const subscription = this.dataservice.getAllCharacters(this.character.starships).subscribe(
-        (res: any) => {
-          console.log(res, 'response');
-          res.map((character: any) => {
-            this.starShipData.push({
-              name: character.name,
-              model: character.model,
-              manufacturer: character.manufacturer,
-              passengers: character.passengers,
-              cargo_capacity: character.cargo_capacity,
+      const subscription = this.dataservice
+        .getAllCharacters(this.character.starships)
+        .subscribe(
+          (res: any) => {
+            res.map((character: any) => {
+              this.starShipData.push({
+                name: character.name,
+                model: character.model,
+                manufacturer: character.manufacturer,
+                passengers: character.passengers,
+                cargo_capacity: character.cargo_capacity,
+              });
             });
-          });
-          this.selectedstar = this.starShipData[0];
-        },
-        (error) => {
-          console.error('Error in fetching API:', error);
-          this.error = 'API Call failed, Please re-load the page';
-        }
-      );
-      this.subscriptions.push(subscription)
-
+            this.selectedstar = this.starShipData[0];
+          },
+          (error) => {
+            console.error('Error in fetching API:', error);
+            this.error = 'API Call failed, Please re-load the page';
+          }
+        );
+      this.subscriptions.push(subscription);
     } else {
       this.starShipData = [];
     }
@@ -116,7 +122,6 @@ export class CharacterDetailsComponent implements OnInit {
   }
 
   selectFilm(val: any) {
-    console.log(val, 'value');
     this.selectedFilm = val;
   }
 
@@ -130,5 +135,9 @@ export class CharacterDetailsComponent implements OnInit {
     } else {
       return val;
     }
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach((subscription) => subscription.unsubscribe());
   }
 }

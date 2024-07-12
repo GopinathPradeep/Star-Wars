@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { DataService } from '../_services/data.service';
 import { Subscription, forkJoin, map, switchMap } from 'rxjs';
 import { Router } from '@angular/router';
@@ -9,7 +9,7 @@ import { FormControl, FormGroup } from '@angular/forms';
   templateUrl: './dashboard.component.html',
   styleUrls: ['./dashboard.component.scss'],
 })
-export class DashboardComponent implements OnInit {
+export class DashboardComponent implements OnInit, OnDestroy {
   private subscriptions: Subscription[] = [];
   characters: any = [];
   moviesData: any = [];
@@ -25,6 +25,8 @@ export class DashboardComponent implements OnInit {
   originalresponse: any = [];
   searchText: any;
   settings: any;
+  filtered: any = [];
+  showTable: boolean = false;
   error: any = '';
   filterForm = new FormGroup({
     movieName: new FormControl('Filter By Movie'),
@@ -34,12 +36,11 @@ export class DashboardComponent implements OnInit {
   nextPage: Number = 0;
   totalCharacters: number = 0;
   constructor(private dataservice: DataService, private router: Router) {
-    const storedCharacters = localStorage.getItem('characters');
+    const storedCharacters = sessionStorage.getItem('characters');
     if (storedCharacters) {
       try {
         this.characters = JSON.parse(storedCharacters);
         this.displayentries = this.characters;
-        console.log(this.characters, 'Parsed Characters');
       } catch (error) {
         this.characters = [];
         this.displayentries = [];
@@ -48,12 +49,12 @@ export class DashboardComponent implements OnInit {
       this.characters = [];
       this.displayentries = [];
     }
-    this.nextPage = JSON.parse(localStorage.getItem('page'));
-    this.totalCharacters = JSON.parse(localStorage.getItem('totalcount'));
-    this.moviesData = JSON.parse(localStorage.getItem('moviesData'));
-    this.speciesData = JSON.parse(localStorage.getItem('speciesData'));
+    this.nextPage = JSON.parse(sessionStorage.getItem('page'));
+    this.totalCharacters = JSON.parse(sessionStorage.getItem('totalcount'));
+    this.moviesData = JSON.parse(sessionStorage.getItem('moviesData'));
+    this.speciesData = JSON.parse(sessionStorage.getItem('speciesData'));
     this.filteredCharacters = JSON.parse(
-      localStorage.getItem('filteredCharacters')
+      sessionStorage.getItem('filteredCharacters')
     );
   }
 
@@ -63,7 +64,7 @@ export class DashboardComponent implements OnInit {
 
   fetchData() {
     this.settings = {
-      singleSelection: false,
+      singleSelection: true,
       idField: 'birth_year',
       textField: 'birth_year',
       selectAllText: 'Select All',
@@ -78,7 +79,7 @@ export class DashboardComponent implements OnInit {
     } else if (this.nextPage != 0) {
       this.isLoading = true;
       this.currentPage = this.nextPage;
-      this.originalresponse = this.characters
+      this.originalresponse = this.characters;
     } else {
       this.nextPage = 0;
       this.isLoading = true;
@@ -92,7 +93,7 @@ export class DashboardComponent implements OnInit {
         (data: any) => {
           this.characters = data.results;
           this.totalCharacters = data.count;
-          localStorage.setItem('totalcount', this.totalCharacters.toString());
+          sessionStorage.setItem('totalcount', this.totalCharacters.toString());
           const filmObservables = [];
           this.characters.forEach(
             (val: any) => {
@@ -111,35 +112,7 @@ export class DashboardComponent implements OnInit {
               } else {
                 val.species = '-';
               }
-              localStorage.setItem('char', JSON.stringify(this.characters));
-              const filmsObservable = this.dataservice
-                .getAllCharacters(val.films)
-                .pipe(
-                  switchMap((filmsData: any[]) => {
-                    const characterObservables = filmsData.map((film: any) =>
-                      this.dataservice.getAllCharacters(film.characters).pipe(
-                        map((charactersData: any[]) => {
-                          const characterNames = charactersData.map(
-                            (char) => char.name
-                          );
-                          return {
-                            ...film,
-                            characters: characterNames,
-                          };
-                        })
-                      )
-                    );
-                    return forkJoin(characterObservables);
-                  }),
-                  map((updatedFilmsData: any[]) => {
-                    const updatedFilms = updatedFilmsData.map(
-                      (film) => film.characters
-                    );
-                    return updatedFilms;
-                  })
-                );
-
-              filmObservables.push(filmsObservable);
+              sessionStorage.setItem('char', JSON.stringify(this.characters));
             },
             (error) => {
               console.error('Error in fetching API:', error);
@@ -148,28 +121,12 @@ export class DashboardComponent implements OnInit {
             }
           );
 
-          forkJoin(filmObservables).subscribe(
-            (updatedFilms: string[][]) => {
-              updatedFilms.forEach((updatedFilm, index) => {
-                this.characters[index].films = updatedFilm;
-              });
-              console.log(this.characters, 'Updated Characters');
-              localStorage.setItem(
-                'characters',
-                JSON.stringify(this.characters)
-              );
-              this.displayentries = this.characters;
-              this.originalresponse = this.characters;
-              if (this.moviesData == null || this.moviesData.length == 0) {
-                this.getMovieData();
-              }
-            },
-            (error) => {
-              console.error('Error in fetching API:', error);
-              this.error = 'API Call failed, Please re-load the page';
-              this.clear();
-            }
-          );
+          sessionStorage.setItem('characters', JSON.stringify(this.characters));
+          this.displayentries = this.characters;
+          this.originalresponse = this.characters;
+          if (this.moviesData == null || this.moviesData.length == 0) {
+            this.getMovieData();
+          }
         },
         (error) => {
           console.error('Error in fetching API:', error);
@@ -179,88 +136,48 @@ export class DashboardComponent implements OnInit {
       );
       this.subscriptions.push(subscription);
     } else {
-      this.characters = [];
+      // this.characters = [];
       this.displayentries = [];
-      localStorage.setItem('page', page.toString());
+      sessionStorage.setItem('page', page.toString());
       const subscription = this.dataservice
         .getCharacters(`/people/?page=${page}`)
         .subscribe(
           (data: any) => {
             this.characters = data.results;
-            const filmObservables = [];
-            this.characters.forEach(
-              (val: any) => {
-                let speciesId = val.species[0]?.slice(-2, -1)[0];
-                if (speciesId !== undefined) {
-                  this.dataservice
-                    .getSpecies(`/species/${speciesId}/`)
-                    .subscribe(
-                      (speciesData: any) => {
-                        val.species = speciesData ? speciesData.name : '-';
-                      },
-                      (error) => {
-                        val.species = '-';
-                      }
-                    );
-                } else {
-                  val.species = '-';
-                }
-                localStorage.setItem('char', JSON.stringify(this.characters));
-                const filmsObservable = this.dataservice
-                  .getAllCharacters(val.films)
-                  .pipe(
-                    switchMap((filmsData: any[]) => {
-                      const characterObservables = filmsData.map((film: any) =>
-                        this.dataservice.getAllCharacters(film.characters).pipe(
-                          map((charactersData: any[]) => {
-                            const characterNames = charactersData.map(
-                              (char) => char.name
-                            );
-                            return {
-                              ...film,
-                              characters: characterNames,
-                            };
-                          })
-                        )
-                      );
-                      return forkJoin(characterObservables);
-                    }),
-                    map((updatedFilmsData: any[]) => {
-                      const updatedFilms = updatedFilmsData.map(
-                        (film) => film.characters
-                      );
-                      return updatedFilms;
-                    })
-                  );
+            let pendingRequests = this.characters.length;
 
-                filmObservables.push(filmsObservable);
-              },
-              (error) => {
-                console.error('Error in fetching API:', error);
-                this.error = 'API Call failed, Please re-load the page';
-                this.clear();
-              }
-            );
-
-            forkJoin(filmObservables).subscribe(
-              (updatedFilms: string[][]) => {
-                updatedFilms.forEach((updatedFilm, index) => {
-                  this.characters[index].films = updatedFilm;
-                });
-                this.displayentries = this.characters;
-                console.log(this.characters, 'Updated Characters');
-                localStorage.setItem(
+            const checkAPICompletion = () => {
+              pendingRequests--;
+              if (pendingRequests === 0) {
+                sessionStorage.setItem('char', JSON.stringify(this.characters));
+                sessionStorage.setItem(
                   'characters',
                   JSON.stringify(this.characters)
                 );
+                this.displayentries = this.characters;
+                this.originalresponse = this.characters;
                 this.getMovieData();
-              },
-              (error) => {
-                console.error('Error in fetching API:', error);
-                this.error = 'API Call failed, Please re-load the page';
-                this.clear();
               }
-            );
+            };
+
+            this.characters.forEach((val: any) => {
+              const speciesId = val.species[0]?.slice(-2, -1)[0];
+              if (speciesId !== undefined) {
+                this.dataservice.getSpecies(`/species/${speciesId}/`).subscribe(
+                  (speciesData: any) => {
+                    val.species = speciesData ? speciesData.name : '-';
+                    checkAPICompletion();
+                  },
+                  (error) => {
+                    val.species = '-';
+                    checkAPICompletion();
+                  }
+                );
+              } else {
+                val.species = '-';
+                checkAPICompletion();
+              }
+            });
           },
           (error) => {
             console.error('Error in fetching API:', error);
@@ -268,6 +185,7 @@ export class DashboardComponent implements OnInit {
             this.clear();
           }
         );
+
       this.subscriptions.push(subscription);
     }
   }
@@ -283,7 +201,7 @@ export class DashboardComponent implements OnInit {
               .getAllCharacters(e.characters)
               .subscribe((res: any) => {
                 this.moviesData = res.map((character: any) => character.name);
-                localStorage.setItem(
+                sessionStorage.setItem(
                   'moviesData',
                   JSON.stringify(this.moviesData)
                 );
@@ -318,7 +236,7 @@ export class DashboardComponent implements OnInit {
         return false;
       }
     );
-    localStorage.setItem(
+    sessionStorage.setItem(
       'filteredCharacters',
       JSON.stringify(this.filteredCharacters)
     );
@@ -335,12 +253,12 @@ export class DashboardComponent implements OnInit {
               .getAllCharacters(e.people)
               .subscribe((res: any) => {
                 this.speciesData = res.map((character: any) => character.name);
-                localStorage.setItem(
+                sessionStorage.setItem(
                   'speciesData',
                   JSON.stringify(this.speciesData)
                 );
-                if(res){
-                  this.isLoading =true
+                if (res) {
+                  this.isLoading = true;
                 }
               });
           }
@@ -356,7 +274,7 @@ export class DashboardComponent implements OnInit {
   }
 
   navigate(data: any, index: number) {
-    localStorage.setItem('navigatedCharacter', JSON.stringify(data));
+    sessionStorage.setItem('navigatedCharacter', JSON.stringify(data));
     this.router.navigate(['/characters', index]);
   }
 
@@ -377,50 +295,53 @@ export class DashboardComponent implements OnInit {
   }
 
   onPageChange(pageNum: number): void {
-    this.showTable = false
-    console.log(pageNum, 'pageNum');
+    this.initForm()
+    this.showTable = false;
     this.pageSize = this.itemsPerPage * (pageNum - 1);
     this.getPeopleData(pageNum);
   }
 
-  ngOnDestroy() {
-    this.subscriptions.forEach((subscription) => subscription.unsubscribe());
+  initForm(){
+    this.filterForm = new FormGroup({
+      movieName: new FormControl('Filter By Movie'),
+      species: new FormControl('Filter By Species'),
+      birthYear: new FormControl(),
+    }); 
   }
 
-  filtered:any = []
-  showTable:boolean = false
-
   applyFilters() {
-    this.showTable = false
+    this.showTable = false;
     const { movieName, species, birthYear } = this.filterForm.value;
-    console.log(this.characters, movieName, birthYear, 'char');
 
     this.filtered = this.characters.filter((character) => {
       return (
-        character.films.flat().includes(movieName) &&
-        birthYear.includes(character.birth_year) &&
-        character.species.includes(species)
+        (character.name.includes(movieName) &&
+          birthYear.includes(character.birth_year)) ||
+        (character.name.includes(movieName) &&
+          character.species.includes(species))
       );
     });
-    console.log(this.filtered,"filteredCharacters")
+    console.log(this.filtered, 'filteredCharacters');
     this.characters = [];
-    this.displayentries = []
+    this.displayentries = [];
     this.displayentries = this.filtered;
-    if(this.filtered.length == 0){
-      this.showTable = true
-    }
-    else{
-      this.showTable = false
+    if (this.filtered.length == 0) {
+      this.showTable = true;
+    } else {
+      this.showTable = false;
     }
   }
 
   clearFilter() {
-    console.log(this.originalresponse,this.characters,"this.originalresponse")
     this.displayentries = this.originalresponse;
-    this.filterForm.reset();
+    this.initForm()
   }
 
   clear() {
-    localStorage.clear();
+    sessionStorage.clear();
+  }
+
+  ngOnDestroy() {
+    this.subscriptions.forEach((subscription) => subscription.unsubscribe());
   }
 }
