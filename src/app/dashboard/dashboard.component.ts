@@ -334,7 +334,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   clearFilter() {
     this.displayentries = this.originalresponse;
-    this.initForm()
+    this.filterForm.reset()
   }
 
   clear() {
